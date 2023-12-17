@@ -2,3 +2,14 @@ html {
   height: 100%;
   width: 100%;
 }
+
+body {
+  margin: 0;
+  background: darkgray;
+  overflow: hidden;
+  text-align: center;
+}
+
+#myCanvas {
+  background: lightgray;
+}
