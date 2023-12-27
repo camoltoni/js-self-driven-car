@@ -12,9 +12,11 @@ class Car {
     this.angle = 0.0
     this.sensor = new Sensor(this)
     this.controls = new Controls()
+    this.polygon = []
   }
   update(roadBorders) {
     this.#move()
+    this.polygon = this.#createPolygon()
     this.sensor.update(roadBorders)
   }
 
@@ -43,6 +45,31 @@ class Car {
     this.x -= Math.sin(this.angle) * this.speed
     this.y -= Math.cos(this.angle) * this.speed
   }
+
+  #createPolygon() {
+    const points = []
+    const radious = Math.hypot(this.width, this.height) / 2.0
+    const alpha = Math.atan2(this.width, this.height)
+    points.push(
+      {x: this.x - Math.sin(this.angle-alpha) * radious,
+       y: this.y - Math.cos(this.angle-alpha) * radious}
+    )
+    points.push(
+      {x: this.x - Math.sin(this.angle+alpha) * radious,
+       y: this.y - Math.cos(this.angle+alpha) * radious}
+    )
+    points.push(
+      {x: this.x - Math.sin(Math.PI + this.angle - alpha) * radious,
+       y: this.y - Math.cos(Math.PI + this.angle - alpha) * radious}
+    )
+    points.push(
+      {x: this.x - Math.sin(Math.PI + this.angle + alpha) * radious,
+       y: this.y - Math.cos(Math.PI + this.angle + alpha) * radious}
+    )
+    return points
+  }
+
+  
   draw(ctx) {
     ctx.save()
     ctx.translate(this.x, this.y)
@@ -55,7 +82,11 @@ class Car {
       this.height)
     ctx.fill()
     ctx.restore()
-
-    this.sensor.draw(ctx)
+    ctx.beginPath()
+    this.polygon.forEach((p)=>{
+      ctx.arc(p.x, p.y, 2, 0, 2 * Math.PI, false)
+    })
+    ctx.stroke()
+    this.sensor.draw(ctx)    
   }
 }
