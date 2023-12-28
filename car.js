@@ -4,22 +4,32 @@ class Car {
     this.y = y
     this.width = width
     this.height = height
-
+    this.polygon = []
+    this.angle = 0.0
+    
     this.speed = 0
     this.acceleration = 0.2
     this.maxSpeed = 3.0
     this.friction = 0.05
-    this.angle = 0.0
+    this.damaged = false
     this.sensor = new Sensor(this)
     this.controls = new Controls()
-    this.polygon = []
   }
   update(roadBorders) {
-    this.#move()
-    this.polygon = this.#createPolygon()
+    if(!this.damaged) {
+      this.#move()
+      this.polygon = this.#createPolygon()
+      this.damaged = this.#assessDamage(roadBorders)
+    }
     this.sensor.update(roadBorders)
   }
 
+  #assessDamage(roadBorders) {
+    return roadBorders.some(border=>{
+      return polysIntersect(this.polygon, border)
+    })
+  }
+  
   #move() {
     const ANGLE_INCREMENT = 0.03
     if(this.controls.forward)
@@ -71,22 +81,18 @@ class Car {
 
   
   draw(ctx) {
-    ctx.save()
-    ctx.translate(this.x, this.y)
-    ctx.rotate(-this.angle)
     ctx.beginPath()
-    ctx.rect(
-      -this.width / 2, 
-      -this.height / 2, 
-      this.width, 
-      this.height)
-    ctx.fill()
-    ctx.restore()
-    ctx.beginPath()
-    this.polygon.forEach((p)=>{
-      ctx.arc(p.x, p.y, 2, 0, 2 * Math.PI, false)
+  
+    if(this.damaged)
+      ctx.fillStyle = "lightblue"
+    else
+      ctx.fillStyle = "blue"
+    const p0 = this.polygon[0]
+    ctx.moveTo(p0.x, p0.y)
+    this.polygon.slice(1, this.polygon.length).forEach(p=>{
+      ctx.lineTo(p.x, p.y)
     })
-    ctx.stroke()
+    ctx.fill()
     this.sensor.draw(ctx)    
   }
 }
