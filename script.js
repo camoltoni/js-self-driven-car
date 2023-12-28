@@ -4,15 +4,16 @@ canvas.width = 200
 
 const ctx = canvas.getContext("2d")
 const road = new Road(canvas.width / 2.0, canvas.width * 0.9)
-const car = new Car(road.getLaneCenter(1), 100, 30, 50);
+const car = new Car(road.getLaneCenter(1), 100, 30, 50, "KEYS");
+const traffic = [
+  new Car(road.getLaneCenter(1),-100, 30, 50, "DUMMY", 2.0)
+]
 let req
 
 document.addEventListener(
   "keydown",
   (event) => {
     const keyName = event.key;
-    // As the user releases the Ctrl key, the key is no longer active,
-    // so event.ctrlKey is false.
     if (keyName === "Escape") {
       cancelAnimationFrame(req)
     }
@@ -23,7 +24,8 @@ document.addEventListener(
 animate();
 
 function animate() {
-  car.update(road.borders)
+  traffic.forEach(c=>{c.update(road.borders, [])})
+  car.update(road.borders, traffic )
   
   canvas.height = window.innerHeight
 
@@ -31,7 +33,9 @@ function animate() {
   ctx.translate(0, -car.y + canvas.height * CAR_Y_PERCENT)
   
   road.draw(ctx)
-  car.draw(ctx)
+
+  traffic.forEach(c=>{c.draw(ctx, "red")})
+  car.draw(ctx, "blue")
   ctx.restore()
   req = requestAnimationFrame(animate)
 }

@@ -1,5 +1,5 @@
 class Car {
-  constructor(x, y, width, height) {
+  constructor(x, y, width, height, controlType, maxSpeed = 3.0) {
     this.x = x
     this.y = y
     this.width = width
@@ -9,24 +9,28 @@ class Car {
     
     this.speed = 0
     this.acceleration = 0.2
-    this.maxSpeed = 3.0
+    this.maxSpeed = maxSpeed
     this.friction = 0.05
     this.damaged = false
-    this.sensor = new Sensor(this)
-    this.controls = new Controls()
+
+    this.controls = new Controls(controlType)
+    if(controlType != "DUMMY")
+      this.sensor = new Sensor(this)
   }
-  update(roadBorders) {
+  update(roadBorders, traffic) {
     if(!this.damaged) {
       this.#move()
       this.polygon = this.#createPolygon()
-      this.damaged = this.#assessDamage(roadBorders)
+      this.damaged = this.#assessDamage(roadBorders, traffic)
     }
-    this.sensor.update(roadBorders)
+    if(this.sensor) this.sensor.update(roadBorders, traffic)
   }
 
-  #assessDamage(roadBorders) {
+  #assessDamage(roadBorders, traffic) {
     return roadBorders.some(border=>{
       return polysIntersect(this.polygon, border)
+    }) || traffic.some(dummy=>{
+      return polysIntersect(this.polygon, dummy.polygon)
     })
   }
   
@@ -80,19 +84,19 @@ class Car {
   }
 
   
-  draw(ctx) {
+  draw(ctx, color) {
     ctx.beginPath()
   
     if(this.damaged)
       ctx.fillStyle = "lightblue"
     else
-      ctx.fillStyle = "blue"
+      ctx.fillStyle = color
     const p0 = this.polygon[0]
     ctx.moveTo(p0.x, p0.y)
     this.polygon.slice(1, this.polygon.length).forEach(p=>{
       ctx.lineTo(p.x, p.y)
     })
     ctx.fill()
-    this.sensor.draw(ctx)    
+    if(this.sensor) this.sensor.draw(ctx)    
   }
 }
